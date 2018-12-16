@@ -1,0 +1,92 @@
+// Copyright (c) 2018 Xiaoman.com, Inc. All Rights Reserved
+// @author chenyi (yuchenshu89757@163.com)
+// @Last Modified: 2018-11-10 23:32:30
+
+syntax = "proto3";
+package com.xiaoman;
+
+message OrcaAdv {
+    uint32 adv_id            = 1;
+    uint32 creation_time     = 2;
+    uint32 expiration_time   = 3;
+    bytes wall_paper_16_to_9 = 4;
+    bytes wall_paper_4_to_3  = 5;
+    bytes div_paper          = 6;
+};
+
+message OrcaPrintLog {
+    uint32 plog_id  = 1;
+    uint32 disptime = 2;
+    string pc_name  = 3;
+    string mac_addr = 4;
+    string ip_addr  = 5;
+    uint64 ad_id    = 6;
+};
+
+message OrcaShowLog {
+    uint32 slog_id  = 1;
+    uint32 disptime = 2;
+    string mac_addr = 3;
+    uint64 ad_id    = 4;
+    bytes picture   = 5;
+};
+
+// Client向Server发送请求的格式
+message QueryAdvRequest {
+    enum QueryType {
+        QUERY_TYPE_SIMPLE  = 0;
+        QUERY_TYPE_COMPLEX = 1;
+    };
+    enum Resolution {
+        RES_4_TO_3  = 0;
+        RES_16_TO_9 = 1;
+    };
+    
+    QueryType type        = 1;
+    string mac_addr       = 2;
+    Resolution resolution = 3;
+    uint32 creation_time  = 4;    
+};
+
+message UpdateAdvRequest {
+    enum UpdateType {
+        UPDATE_TYPE_CREATE = 0;
+        UPDATE_TYPE_UPDATE = 1;
+        UPDATE_TYPE_DELETE = 2;
+    }; 
+   
+    UpdateType type = 1;
+    OrcaAdv adv     = 2;
+};
+
+message InsertLogRequest {
+    OrcaPrintLog print_log = 1;
+};
+
+message InsertScreenhotRequest {
+    OrcaShowLog show_log = 1;
+};
+
+// Server向Client回传响应的请求格式
+message QueryAdvResponse {
+    OrcaAdv adv = 1;
+};
+
+message UpdateAdvResponse {
+    bool update_succ = 1;
+};
+
+message InsertLogResponse {
+    bool insert_succ = 1;
+};
+
+message InsertScreenshotResponse {
+    bool insert_succ = 1;
+};
+
+service gRPC {
+    rpc QueryAdv (QueryAdvRequest) returns (stream QueryAdvResponse) {}
+    rpc UpdateAdv (UpdateAdvRequest) returns (UpdateAdvResponse) {}
+    rpc InsertLog (InsertLogRequest) returns (InsertLogResponse) {}
+    rpc InsertScreenhot (InsertScreenhotRequest) returns (InsertScreenshotResponse) {}
+};

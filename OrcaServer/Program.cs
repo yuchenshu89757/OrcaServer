@@ -10,7 +10,7 @@ namespace OrcaServer
     internal class MainClass
     {
         private static readonly string conf_path = "./Conf";
-        private static readonly string conf_file = "program.conf";
+        private static readonly string conf_file = "Program.conf";
 
         public static void Main(string[] args)
         {
