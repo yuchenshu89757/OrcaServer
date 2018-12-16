@@ -46,5 +46,10 @@ namespace OrcaServer.View
                 return m_table[key].ToString();
             }
         }
+
+        public bool Contains(string key)
+        {
+            return m_table.ContainsKey(key);
+        }
     }
 }
