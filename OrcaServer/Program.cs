@@ -1,17 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using OrcaServer.View;
+using OrcaServer.Model.Database;
+using Grpc.Core;
+using Com.Xiaoman;
 
 namespace OrcaServer
 {
-    class MainClass
+    internal class MainClass
     {
-        static readonly string conf_path = "./conf";
-        static readonly string conf_file = "program.conf";
+        private static readonly string conf_path = "./conf";
+        private static readonly string conf_file = "program.conf";
 
         public static void Main(string[] args)
         {
-            Server orcaServer = new Server();
-
             Console.WriteLine("Start to load configure....");
             Configure conf = new Configure();
             if (!conf.Load(conf_path, conf_file))
@@ -19,12 +21,40 @@ namespace OrcaServer
                 Console.WriteLine("Load conf failed.");
                 return;
             }
-            Console.WriteLine("Start to Init Server...");
-            if (!orcaServer.Init(conf)) {
-                Console.WriteLine("Init Server failed.");
+
+            Console.WriteLine("Start to Init DatabaseConf...");
+            if (!DatabaseConf.Init(conf))
+            {
+                Console.WriteLine("Init DatabaseConf failed.");
                 return;
             }
-            orcaServer.Run();
+
+            Console.WriteLine("Start to Init AdvManager...");
+            if (!AdvManager.Init(conf))
+            {
+                Console.WriteLine("Init AdvManager failed.");
+                return;
+            }
+
+            Console.WriteLine("Start to Init Server...");
+            string host = conf["SERVER.IP"];
+            int port = int.Parse(conf["SERVER.PORT"]);
+
+            var options = new List<ChannelOption> { 
+               new ChannelOption(ChannelOptions.MaxReceiveMessageLength, int.MaxValue),
+               new ChannelOption(ChannelOptions.MaxSendMessageLength, int.MaxValue)
+            };
+            Server orcaServer = new Server(options)
+            {
+                Services = { gRPC.BindService(new GRPCImpl()) },
+                Ports = {new ServerPort(host, port, ServerCredentials.Insecure)}
+            };
+
+            Console.WriteLine("gRPC server listening on {0}:{1}", host, port);
+            orcaServer.Start();
+            while (true) {}
+
+            //orcaServer.ShutdownAsync().Wait();
         }
     }
 }

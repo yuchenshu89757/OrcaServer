@@ -1,16 +1,14 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using System.Data;
 using System.Collections.Generic;
 using OrcaServer.Model.Database;
 using OrcaServer.Model.Entity;
-using MySql.Data.MySqlClient;
 
 namespace OrcaServer.Model.Dao
 {
     public class AdvDao
     {
-        readonly MySqlDbHelper db;
+        private readonly IDatabaseHelper db;
 
         public AdvDao()
         {
@@ -20,24 +18,19 @@ namespace OrcaServer.Model.Dao
         public void Add(Adv adv)
         {
             StringBuilder sqlBuilder = new StringBuilder()
-                .Append("insert into {0} (adv_ctime, adv_etime, adv_paper_4_3_len, adv_wallpaper_4_3, ")
-                .Append("adv_paper_16_9_len, adv_wallpaper_16_9, adv_paper_div_len, adv_divpaper)")
-                .Append(" values ({1}, {2}, {3}, '{4}', {5}, '{6}', {7}, '{8}')");
-            string sql = string.Format(sqlBuilder.ToString(), DatabaseConf.AdvTable, adv.AdvCreationTime,
-                                       adv.AdvExpirationTime, adv.AdvWpaper1Len, adv.AdvWpaper1, 
-                                       adv.AdvWpaper2Len, adv.AdvWpaper2, adv.AdvDivPaperLen, adv.AdvDivPaper);
+                .Append("insert into {0} (adv_id, adv_ctime, adv_etime) ")
+                .Append("values ({1}, {2}, {3})");
+            string sql = string.Format(sqlBuilder.ToString(), DatabaseConf.AdvTable, 
+                                       adv.AdvId, adv.AdvCreationTime, adv.AdvExpirationTime);
             db.ExecuteUpdate(sql);
         }
 
         public void Update(Adv adv)
         {
             StringBuilder sqlBuilder = new StringBuilder()
-                .Append("update {0} set adv_ctime = {1}, adv_etime = {2}, adv_paper_4_3_len = {3}, ")
-                .Append("adv_wallpaper_4_3 = '{4}', adv_paper_16_9_len = {5}, adv_wallpaper_16_9 = '{6}', ")
-                .Append("adv_paper_div_len = {7}, adv_divpaper = '{8}' where adv_id = {9}");
+                .Append("update {0} set adv_ctime = {1}, adv_etime = {2 where adv_id = {3}");
             string sql = string.Format(sqlBuilder.ToString(), DatabaseConf.AdvTable, adv.AdvCreationTime,
-                                       adv.AdvExpirationTime, adv.AdvWpaper1Len, adv.AdvWpaper1, adv.AdvWpaper2Len,
-                                       adv.AdvWpaper2, adv.AdvDivPaperLen, adv.AdvDivPaper, adv.AdvId);
+                                       adv.AdvExpirationTime, adv.AdvId);
             db.ExecuteUpdate(sql);
         }
 
@@ -51,37 +44,18 @@ namespace OrcaServer.Model.Dao
 
         List<Adv> GetAdvList(string sql)
         {
-            MySqlDataReader reader = db.ExecuteReader(sql);
-            if (reader == null)
-            {
-                return null;
-            }
             List<Adv> list = new List<Adv>();
-            while (reader.Read())
+            DataSet ds = db.ExecuteQuery(sql);
+            DataTable dt = ds.Tables[0];
+            foreach (DataRow dr in dt.Rows)
             {
-                Console.WriteLine("Enter while...");
-                Adv adv = new Adv
+                list.Add(new Adv
                 {
-                    AdvId = reader.GetUInt32(0),
-                    AdvCreationTime = reader.GetUInt32(1),
-                    AdvExpirationTime = reader.GetUInt32(2)
-
-                };
-
-                adv.AdvWpaper1Len = reader.GetInt32(reader.GetOrdinal("adv_paper_4_3_len"));
-                adv.AdvWpaper1 = new byte[adv.AdvWpaper1Len];
-                reader.GetBytes(reader.GetOrdinal("adv_wallpaper_4_3"), 0, adv.AdvWpaper1, 0, adv.AdvWpaper1Len);
-
-                adv.AdvWpaper2Len = reader.GetInt32(reader.GetOrdinal("adv_paper_16_9_len"));
-                adv.AdvWpaper2 = new byte[adv.AdvWpaper2Len];
-                reader.GetBytes(reader.GetOrdinal("adv_wallpaper_16_9"), 0, adv.AdvWpaper2, 0, adv.AdvWpaper2Len);
-
-                adv.AdvDivPaperLen = reader.GetInt32(reader.GetOrdinal("adv_paper_div_len"));
-                adv.AdvDivPaper = new byte[adv.AdvDivPaperLen];
-                reader.GetBytes(reader.GetOrdinal("adv_divpaper"), 0, adv.AdvDivPaper, 0, adv.AdvDivPaperLen);
-                list.Add(adv);
+                    AdvId = uint.Parse(dr["adv_id"].ToString()),
+                    AdvCreationTime = uint.Parse(dr["adv_ctime"].ToString()),
+                    AdvExpirationTime = uint.Parse(dr["adv_etime"].ToString()),
+                });
             }
-            reader.Close();
             return list;
         }
 

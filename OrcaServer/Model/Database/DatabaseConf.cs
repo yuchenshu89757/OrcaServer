@@ -18,7 +18,7 @@ namespace OrcaServer.Model.Database
                 ShowLogTable = conf["DATABASE.SHOWLOG_TABLE"];
                 PrintLogTable = conf["DATABASE.PRINTLOG_TABLE"];
             } catch (Exception ex) {
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine(ex.Message);
                 return false;
             }
             return true;
